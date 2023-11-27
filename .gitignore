@@ -306,3 +306,9 @@ pyrightconfig.json
 .ionide
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,intellij,python
+
+.data/ABIDE_pcp/cpac/filt_noglobal/processed
+log
+model
+data/ABIDE_pcp/cpac/filt_noglobal/processed
+.DS_Store

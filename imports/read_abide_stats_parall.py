@@ -14,7 +14,7 @@ import numpy as np
 from scipy.io import loadmat
 from torch_geometric.data import Data
 import networkx as nx
-from networkx.convert_matrix import from_numpy_matrix
+# from networkx.convert_matrix import from_numpy_arr
 import multiprocessing
 from torch_sparse import coalesce
 from torch_geometric.utils import remove_self_loops
@@ -22,6 +22,8 @@ from functools import partial
 import deepdish as dd
 from imports.gdc import GDC
 
+root_folder = os.path.join(os.path.dirname(__file__)).replace('imports', 'data')
+data_folder = os.path.join(root_folder, 'ABIDE_pcp/cpac/filt_noglobal/')
 
 def split(data, batch):
     node_slice = torch.cumsum(torch.from_numpy(np.bincount(batch)), 0)
@@ -81,7 +83,7 @@ def read_data(data_dir):
     cores = multiprocessing.cpu_count()
     pool = multiprocessing.Pool(processes=cores)
     #pool =  MyPool(processes = cores)
-    func = partial(read_sigle_data, data_dir)
+    func = partial(read_single_data, data_dir)
 
     import timeit
 
@@ -125,7 +127,7 @@ def read_data(data_dir):
     return data, slices
 
 
-def read_sigle_data(data_dir,filename,use_gdc =False):
+def read_single_data(data_dir,filename,use_gdc =False):
 
     temp = dd.io.load(osp.join(data_dir, filename))
 
@@ -133,8 +135,9 @@ def read_sigle_data(data_dir,filename,use_gdc =False):
     pcorr = np.abs(temp['pcorr'][()])
 
     num_nodes = pcorr.shape[0]
-    G = from_numpy_matrix(pcorr)
-    A = nx.to_scipy_sparse_matrix(G)
+    # G = nx.from_numpy_matrix(pcorr)
+    G = nx.from_numpy_array(pcorr)
+    A = nx.to_scipy_sparse_array(G)
     adj = A.tocoo()
     edge_att = np.zeros(len(adj.row))
     for i in range(len(adj.row)):
@@ -171,9 +174,9 @@ def read_sigle_data(data_dir,filename,use_gdc =False):
 
 if __name__ == "__main__":
     # data_dir = '/home/azureuser/projects/BrainGNN/data/ABIDE_pcp/cpac/filt_noglobal/raw'
-    data_dir = './data/ABIDE_pcp/cpac/filt_noglobal/raw'
+    data_dir = os.path.join(data_folder, 'raw')
     filename = '50346.h5'
-    read_sigle_data(data_dir, filename)
+    read_single_data(data_dir, filename)
 
 
 

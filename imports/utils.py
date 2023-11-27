@@ -5,6 +5,7 @@ import torch
 from scipy.io import loadmat
 from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection import KFold
+import os
 
 
 def train_val_test_split(kfold = 5, fold = 0):
@@ -35,3 +36,7 @@ def train_val_test_split(kfold = 5, fold = 0):
     val_id = val_index[fold]
 
     return train_id,val_id,test_id
+
+def get_data_folder():
+    root_folder = os.path.join(os.path.dirname(__file__)).replace('imports', 'data')
+    return root_folder
