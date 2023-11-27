@@ -19,12 +19,13 @@ import argparse
 import pandas as pd
 import numpy as np
 from imports import preprocess_data as Reader
-import deepdish as dd
+# import deepdish as dd
+import h5py
 import warnings
 import os
 
 warnings.filterwarnings("ignore")
-root_folder = '/data/'
+root_folder = os.path.join(os.path.dirname(__file__), "data")
 data_folder = os.path.join(root_folder, 'ABIDE_pcp/cpac/filt_noglobal/')
 
 # Process boolean command line arguments
@@ -86,7 +87,11 @@ def main():
     if not os.path.exists(os.path.join(data_folder,'raw')):
         os.makedirs(os.path.join(data_folder,'raw'))
     for i, subject in enumerate(subject_IDs):
-        dd.io.save(os.path.join(data_folder,'raw',subject+'.h5'),{'corr':fea_corr[i],'pcorr':fea_pcorr[i],'label':y[i]%2})
+        # dd.io.save(os.path.join(data_folder,'raw',subject+'.h5'),{'corr':fea_corr[i],'pcorr':fea_pcorr[i],'label':y[i]%2})
+        with h5py.File(os.path.join(data_folder,'raw',subject+'.h5'), 'w') as hf:
+            hf.create_dataset('corr', data=fea_corr[i])
+            hf.create_dataset('pcorr', data=fea_pcorr[i])
+            hf.create_dataset('label', data=y[i]%2)
 
 if __name__ == '__main__':
     main()

@@ -27,7 +27,8 @@ import sys
 
 # Input data variables
 code_folder = os.getcwd()
-root_folder = '/data/'
+# root_folder = 'data'
+root_folder = os.path.join(os.path.dirname(__file__), "data")
 data_folder = os.path.join(root_folder, 'ABIDE_pcp/cpac/filt_noglobal/')
 if not os.path.exists(data_folder):
     os.makedirs(data_folder)
@@ -78,7 +79,6 @@ def main():
 
     subject_IDs = Reader.get_ids() #changed path to data path
     subject_IDs = subject_IDs.tolist()
-
     # Create a folder for each subject
     for s, fname in zip(subject_IDs, Reader.fetch_filenames(subject_IDs, files[0], atlas)):
         subject_folder = os.path.join(data_folder, s)
