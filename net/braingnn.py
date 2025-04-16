@@ -49,7 +49,7 @@ class Network(torch.nn.Module):
 
 
 
-    def forward(self, x, edge_index, batch, edge_attr, pos):
+    def forward(self, x, edge_index, batch, edge_attr, pos, explain=False):
 
         x = self.conv1(x, edge_index, edge_attr, pos)
         x, edge_index, edge_attr, batch, perm, score1 = self.pool1(x, edge_index, edge_attr, batch)
@@ -73,7 +73,10 @@ class Network(torch.nn.Module):
         x = F.log_softmax(self.fc3(x), dim=-1)
 
         # return x, self.pool1.weight, self.pool2.weight, torch.sigmoid(score1).view(x.size(0),-1), torch.sigmoid(score2).view(x.size(0),-1)
-        return x, score1, score2, torch.sigmoid(score1).view(x.size(0),-1), torch.sigmoid(score2).view(x.size(0),-1)
+        if explain:
+          return x, score1, score2, torch.sigmoid(score1).view(x.size(0),-1), torch.sigmoid(score2).view(x.size(0),-1), edge_index[0]
+        else:
+          return x, score1, score2, torch.sigmoid(score1).view(x.size(0),-1), torch.sigmoid(score2).view(x.size(0),-1)
 
 
 
