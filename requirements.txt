@@ -1,5 +1,8 @@
-torch-scatter torch-sparse torch-cluster torch-spline-conv -f https://data.pyg.org/whl/torch-2.1.1+cu121.html
-     
+torch-scatter
+torch-sparse
+torch-cluster
+torch-spline-conv
+-f https://data.pyg.org/whl/torch-2.1.1+cu121.html
 absl-py==2.0.0
 blosc2==2.3.1
 cachetools==5.3.2
