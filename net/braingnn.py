@@ -77,7 +77,16 @@ class Network(torch.nn.Module):
         x = F.log_softmax(self.fc3(x), dim=-1)
 
         # return x, self.pool1.weight, self.pool2.weight, torch.sigmoid(score1).view(x.size(0),-1), torch.sigmoid(score2).view(x.size(0),-1)
-        if __explain__:
+      
+        if self.__explain__:
+          
+            # Obtains final pooled nodes
+          
+            original_indices_1 = torch.where(perm1)[0]
+            survived_after_pool2 = torch.where(perm2)[0]
+            final_indices = original_indices_1[survived_after_pool2]
+          
+            return x, score1, score2, torch.sigmoid(score1).view(x.size(0),-1), torch.sigmoid(score2).view(x.size(0),-1), final_indices
           
         return x, score1, score2, torch.sigmoid(score1).view(x.size(0),-1), torch.sigmoid(score2).view(x.size(0),-1)
 
