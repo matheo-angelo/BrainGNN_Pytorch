@@ -47,10 +47,10 @@ class Network(torch.nn.Module):
         self.bn2 = torch.nn.BatchNorm1d(self.dim3)
         self.fc3 = torch.nn.Linear(self.dim3, nclass)
 
-    def explain():
+    def explain(self):
         self.__explain__ = True
 
-    def dont_explain():
+    def dont_explain(self):
         self.__explain__ = False
 
     def forward(self, x, edge_index, batch, edge_attr, pos):
