@@ -31,6 +31,7 @@ class Network(torch.nn.Module):
         self.dim5 = 8
         self.k = k
         self.R = R
+        self.__explain__ = False
 
         self.n1 = nn.Sequential(nn.Linear(self.R, self.k, bias=False), nn.ReLU(), nn.Linear(self.k, self.dim1 * self.indim))
         self.conv1 = MyNNConv(self.indim, self.dim1, self.n1, normalize=False)
@@ -46,8 +47,11 @@ class Network(torch.nn.Module):
         self.bn2 = torch.nn.BatchNorm1d(self.dim3)
         self.fc3 = torch.nn.Linear(self.dim3, nclass)
 
+    def explain():
+        self.__explain__ = True
 
-
+    def dont_explain():
+        self.__explain__ = False
 
     def forward(self, x, edge_index, batch, edge_attr, pos, explain=False):
 
@@ -73,10 +77,7 @@ class Network(torch.nn.Module):
         x = F.log_softmax(self.fc3(x), dim=-1)
 
         # return x, self.pool1.weight, self.pool2.weight, torch.sigmoid(score1).view(x.size(0),-1), torch.sigmoid(score2).view(x.size(0),-1)
-        if explain:
-          return x, score1, score2, torch.sigmoid(score1).view(x.size(0),-1), torch.sigmoid(score2).view(x.size(0),-1), edge_index[0]
-        else:
-          return x, score1, score2, torch.sigmoid(score1).view(x.size(0),-1), torch.sigmoid(score2).view(x.size(0),-1)
+        return x, score1, score2, torch.sigmoid(score1).view(x.size(0),-1), torch.sigmoid(score2).view(x.size(0),-1)
 
 
 
