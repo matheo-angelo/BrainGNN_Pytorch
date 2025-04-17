@@ -56,16 +56,16 @@ class Network(torch.nn.Module):
     def forward(self, x, edge_index, batch, edge_attr, pos):
 
         x = self.conv1(x, edge_index, edge_attr, pos)
-        x, edge_index, edge_attr, batch, perm, score1 = self.pool1(x, edge_index, edge_attr, batch)
+        x, edge_index, edge_attr, batch, perm1, score1 = self.pool1(x, edge_index, edge_attr, batch)
 
-        pos = pos[perm]
+        pos = pos[perm1]
         x1 = torch.cat([gmp(x, batch), gap(x, batch)], dim=1)
 
         edge_attr = edge_attr.squeeze()
         edge_index, edge_attr = self.augment_adj(edge_index, edge_attr, x.size(0))
 
         x = self.conv2(x, edge_index, edge_attr, pos)
-        x, edge_index, edge_attr, batch, perm, score2 = self.pool2(x, edge_index,edge_attr, batch)
+        x, edge_index, edge_attr, batch, perm2, score2 = self.pool2(x, edge_index,edge_attr, batch)
 
         x2 = torch.cat([gmp(x, batch), gap(x, batch)], dim=1)
 
@@ -77,6 +77,8 @@ class Network(torch.nn.Module):
         x = F.log_softmax(self.fc3(x), dim=-1)
 
         # return x, self.pool1.weight, self.pool2.weight, torch.sigmoid(score1).view(x.size(0),-1), torch.sigmoid(score2).view(x.size(0),-1)
+        if __explain__:
+          
         return x, score1, score2, torch.sigmoid(score1).view(x.size(0),-1), torch.sigmoid(score2).view(x.size(0),-1)
 
 
