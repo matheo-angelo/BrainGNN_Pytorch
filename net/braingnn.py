@@ -53,7 +53,7 @@ class Network(torch.nn.Module):
     def dont_explain():
         self.__explain__ = False
 
-    def forward(self, x, edge_index, batch, edge_attr, pos, explain=False):
+    def forward(self, x, edge_index, batch, edge_attr, pos):
 
         x = self.conv1(x, edge_index, edge_attr, pos)
         x, edge_index, edge_attr, batch, perm, score1 = self.pool1(x, edge_index, edge_attr, batch)
