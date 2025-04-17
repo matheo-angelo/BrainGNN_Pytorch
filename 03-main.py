@@ -209,8 +209,6 @@ def main(opt):
         model = Network(opt.indim,opt.ratio,opt.nclass).to(device)
         model.load_state_dict(torch.load(os.path.join(opt.save_path,str(fold)+'.pth')))
         model.eval()
-        if explain:
-            model.explain()
         preds = []
         correct = 0
         for data in val_loader:
@@ -228,14 +226,21 @@ def main(opt):
     else:
         model.load_state_dict(best_model_wts)
         model.eval()
-        if explain:
-            model.explain()
         test_accuracy = test_acc(test_loader)
         test_l= test_loss(test_loader,0)
         print("===========================")
         print("Test Acc: {:.7f}, Test Loss: {:.7f} ".format(test_accuracy, test_l))
         print(opt)
 
+    if explain:
+        model.explain()
+        explain_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
+        for i, data in enumerate(explain_loader):
+            data = data.to(device)
+            outputs= model(data.x, data.edge_index, data.batch, data.edge_attr,data.pos)
+            node_mask = outputs[-1]
+            sample_idx = te_index[i]
+            print(f"Explanation for sample {sample_idx}: {node_mask}")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
