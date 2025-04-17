@@ -78,15 +78,10 @@ class Network(torch.nn.Module):
 
         # return x, self.pool1.weight, self.pool2.weight, torch.sigmoid(score1).view(x.size(0),-1), torch.sigmoid(score2).view(x.size(0),-1)
       
-        if self.__explain__:
-          
-            # Obtains final pooled nodes
-          
-            original_indices_1 = torch.where(perm1)[0]
-            survived_after_pool2 = torch.where(perm2)[0]
-            final_indices = original_indices_1[survived_after_pool2]
-          
-            return x, score1, score2, torch.sigmoid(score1).view(x.size(0),-1), torch.sigmoid(score2).view(x.size(0),-1), final_indices
+        if self.__explain__:      
+            # Obtains the list of final pooled nodes as a node mask
+            node_mask = perm1[perm2]
+            return x, score1, score2, torch.sigmoid(score1).view(x.size(0),-1), torch.sigmoid(score2).view(x.size(0),-1), node_mask
           
         return x, score1, score2, torch.sigmoid(score1).view(x.size(0),-1), torch.sigmoid(score2).view(x.size(0),-1)
 
