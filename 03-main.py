@@ -36,6 +36,7 @@ def main(opt):
     opt_method = opt.optim
     num_epoch = opt.n_epochs
     fold = opt.fold
+    explain = opt.explain
     writer = SummaryWriter(os.path.join('./log',str(fold)))
 
 
@@ -208,6 +209,8 @@ def main(opt):
         model = Network(opt.indim,opt.ratio,opt.nclass).to(device)
         model.load_state_dict(torch.load(os.path.join(opt.save_path,str(fold)+'.pth')))
         model.eval()
+        if explain:
+            model.explain()
         preds = []
         correct = 0
         for data in val_loader:
@@ -225,6 +228,8 @@ def main(opt):
     else:
         model.load_state_dict(best_model_wts)
         model.eval()
+        if explain:
+            model.explain()
         test_accuracy = test_acc(test_loader)
         test_l= test_loss(test_loader,0)
         print("===========================")
@@ -258,5 +263,6 @@ if __name__ == '__main__':
     parser.add_argument('--save_model', type=bool, default=True)
     parser.add_argument('--optim', type=str, default='Adam', help='optimization method: SGD, Adam')
     parser.add_argument('--save_path', type=str, default='./model/', help='path to save model')
+    parser.add_argument('--explain', type=bool, default=False, help='whether to explain the model')
     opt = parser.parse_args()
     main(opt)
