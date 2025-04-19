@@ -239,6 +239,7 @@ def main(opt):
             data = data.to(device)
             outputs= model(data.x, data.edge_index, data.batch, data.edge_attr,data.pos)
             node_mask = outputs[-1]
+            node_mask, _ = torch.sort(node_mask)
             sample_idx = te_index[i]
             print(f"Explanation for sample {sample_idx}: {node_mask}")
 
