@@ -4,6 +4,7 @@ from torch.distributions import Categorical
 
 def add_noise_to_rows(matrix, row_indices):
 
+    torch.manual_seed(123)
     noisy_matrix = matrix.clone()
     noise = torch.randn_like(noisy_matrix[row_indices])
     noisy_matrix[row_indices] += noise
