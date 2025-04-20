@@ -3,6 +3,7 @@ import numpy as np
 import argparse
 import time
 import copy
+import pickle
 
 import torch
 import torch.nn.functional as F
@@ -14,6 +15,7 @@ from torch_geometric.data import DataLoader
 from net.braingnn import Network
 from imports.utils import train_val_test_split, get_data_folder
 from sklearn.metrics import classification_report, confusion_matrix
+from explainability import explain_model
 
 ROOT_FOLDER = get_data_folder()
 
@@ -35,9 +37,12 @@ def main(opt):
     load_model = opt.load_model
     opt_method = opt.optim
     num_epoch = opt.n_epochs
+    n_roi = opt.nroi
     fold = opt.fold
     explain = opt.explain
-    writer = SummaryWriter(os.path.join('./log',str(fold)))
+    print_explainability_report = opt.print_explainability_report
+    model_file_name = opt.model_file_name
+    writer = SummaryWriter(os.path.join('./log',str(fold)))   
 
 
 
@@ -177,6 +182,7 @@ def main(opt):
     best_model_wts = copy.deepcopy(model.state_dict())
     best_loss = 1e10
     for epoch in range(0, num_epoch):
+
         since  = time.time()
         tr_loss, s1_arr, s2_arr, w1, w2 = train(epoch)
         tr_acc = test_acc(train_loader)
@@ -186,7 +192,7 @@ def main(opt):
         print('*====**')
         print('{:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
         print('Epoch: {:03d}, Train Loss: {:.7f}, '
-            'Train Acc: {:.7f}, Test Loss: {:.7f}, Test Acc: {:.7f}'.format(epoch, tr_loss,
+            'Train Acc: {:.7f}, Validation Loss: {:.7f}, Validation Acc: {:.7f}'.format(epoch, tr_loss,
                                                         tr_acc, val_loss, val_acc))
 
         writer.add_scalars('Acc',{'train_acc':tr_acc,'val_acc':val_acc},  epoch)
@@ -199,7 +205,7 @@ def main(opt):
             best_loss = val_loss
             best_model_wts = copy.deepcopy(model.state_dict())
             if save_model:
-                torch.save(best_model_wts, os.path.join(opt.save_path,str(fold)+'.pth'))
+                torch.save(best_model_wts, os.path.join(opt.save_path,model_file_name+'.pth'))
 
     #######################################################################################
     ######################### Testing on testing set ######################################
@@ -207,7 +213,7 @@ def main(opt):
 
     if opt.load_model:
         model = Network(opt.indim,opt.ratio,opt.nclass).to(device)
-        model.load_state_dict(torch.load(os.path.join(opt.save_path,str(fold)+'.pth')))
+        model.load_state_dict(torch.load(os.path.join(opt.save_path,model_file_name+'.pth')))
         model.eval()
         preds = []
         correct = 0
@@ -233,15 +239,28 @@ def main(opt):
         print(opt)
 
     if explain:
-        model.explain()
+
         explain_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
-        for i, data in enumerate(explain_loader):
-            data = data.to(device)
-            outputs= model(data.x, data.edge_index, data.batch, data.edge_attr,data.pos)
-            node_mask = outputs[-1]
-            node_mask, _ = torch.sort(node_mask)
-            sample_idx = te_index[i]
-            print(f"Explanation for sample {sample_idx}: {node_mask}")
+        explanation_list, fidelity, sparsity, mask_entropy, biomarker = explain_model(model, explain_loader, te_index, n_roi)
+        data_to_save = {
+          'explanation_list' : explanation_list,
+          'fidelity' : fidelity,
+          'sparsity' : sparsity,
+          'mask_entropy' : mask_entropy,
+          'biomarker' : biomarker
+        }
+        with open('explainability_report.pkl', 'wb') as file:
+          pickle.dump(data_to_save, file)
+
+        if print_explainability_report:
+
+            print("\nExplainability report:\n")
+            for explanation in explanation_list:
+              print(f"Explanation for sample {explanation[0]}: {explanation[1]}\n")
+            
+            print("\nExplainability metrics:")
+            print(f"Fidelity: {fidelity}  |  Sparsity: {sparsity}  |  Mask entropy (normalized): {mask_entropy}\n")
+            print(f"\nSuggested biomarker: {biomarker}")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -260,7 +279,6 @@ if __name__ == '__main__':
     parser.add_argument('--lamb3', type=float, default=0.1, help='s1 entropy regularization')
     parser.add_argument('--lamb4', type=float, default=0.1, help='s2 entropy regularization')
     parser.add_argument('--lamb5', type=float, default=0.1, help='s1 consistence regularization')
-    parser.add_argument('--layer', type=int, default=2, help='number of GNN layers')
     parser.add_argument('--ratio', type=float, default=0.5, help='pooling ratio')
     parser.add_argument('--indim', type=int, default=200, help='feature dim')
     parser.add_argument('--nroi', type=int, default=200, help='num of ROIs')
@@ -269,6 +287,8 @@ if __name__ == '__main__':
     parser.add_argument('--save_model', type=bool, default=True)
     parser.add_argument('--optim', type=str, default='Adam', help='optimization method: SGD, Adam')
     parser.add_argument('--save_path', type=str, default='./model/', help='path to save model')
+    parser.add_argument ('--model_file_name', type=str, default='save_model', help='model weights file name')
     parser.add_argument('--explain', type=bool, default=False, help='whether to explain the model')
+    parser.add_argument('--print_explainability_report', type=bool, default=True, help='if explain=True, prints model explainability metrics and node mask explanations')
     opt = parser.parse_args()
     main(opt)
