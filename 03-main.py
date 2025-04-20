@@ -249,7 +249,7 @@ def main(opt):
           'mask_entropy' : mask_entropy,
           'biomarker' : biomarker
         }
-        with open('explainability_report.pkl', 'wb') as file:
+        with open(model_file_name + '_explainability_report.pkl', 'wb') as file:
           pickle.dump(data_to_save, file)
 
         if print_explainability_report:
@@ -287,7 +287,7 @@ if __name__ == '__main__':
     parser.add_argument('--save_model', type=bool, default=True)
     parser.add_argument('--optim', type=str, default='Adam', help='optimization method: SGD, Adam')
     parser.add_argument('--save_path', type=str, default='./model/', help='path to save model')
-    parser.add_argument ('--model_file_name', type=str, default='save_model', help='model weights file name')
+    parser.add_argument ('--model_file_name', type=str, default='saved_model', help='model weights file name')
     parser.add_argument('--explain', type=bool, default=False, help='whether to explain the model')
     parser.add_argument('--print_explainability_report', type=bool, default=True, help='if explain=True, prints model explainability metrics and node mask explanations')
     opt = parser.parse_args()
