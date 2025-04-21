@@ -68,11 +68,15 @@ def explain_model(model, explain_loader, sample_indices, n_roi, biomarker_size=1
         fidelity_minus_sum += fidelity_minus
 
     sparsity = sparsity_sum	/ len(explain_loader)
+    
     fidelity_plus = (fidelity_plus_sum	/ len(explain_loader)).item()
+    
     fidelity_minus = (fidelity_minus_sum	/ len(explain_loader)).item()
+    
     mask_entropy = Categorical(probs = mask_distribution / mask_distribution.sum()).entropy()
     max_possible_entropy = Categorical(probs = max_entropy_distribution).entropy()
     normalized_mask_entropy = mask_entropy / max_possible_entropy
+    
     biomarker = (torch.topk(mask_distribution, biomarker_size, sorted=True)[1]).tolist()
 
     return explanation_list, fidelity_plus, fidelity_minus, sparsity, normalized_mask_entropy, biomarker
