@@ -17,7 +17,7 @@ def instance_fidelity_plus(model, data, mask, outputs):
     data.x[mask] = 0
     outputs= model(data.x, data.edge_index, data.batch, data.edge_attr,data.pos)
     masked_model_prob = outputs[0].max(1)[0]
-    return model_prob - masked_model_prob	
+    return torch.abs(model_prob - masked_model_prob)	
 
 def instance_fidelity_minus(model, data, mask, outputs):
     
@@ -30,7 +30,7 @@ def instance_fidelity_minus(model, data, mask, outputs):
     
     outputs= model(data.x, data.edge_index, data.batch, data.edge_attr,data.pos)
     masked_model_prob = outputs[0].max(1)[0]
-    return 1 - (model_prob - masked_model_prob)	
+    return 1 - torch.abs(model_prob - masked_model_prob)	
 
 def explain_model(model, explain_loader, sample_indices, n_roi, biomarker_size=10):
 
