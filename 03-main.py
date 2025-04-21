@@ -241,10 +241,11 @@ def main(opt):
     if explain:
 
         explain_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
-        explanation_list, fidelity, sparsity, mask_entropy, biomarker = explain_model(model, explain_loader, te_index, n_roi)
+        explanation_list, fidelity_plus, fidelity_minus, sparsity, mask_entropy, biomarker = explain_model(model, explain_loader, te_index, n_roi)
         data_to_save = {
           'explanation_list' : explanation_list,
-          'fidelity' : fidelity,
+          'fidelity_plus' : fidelity_plus,
+          'fidelity_minus' : fidelity_minus,
           'sparsity' : sparsity,
           'mask_entropy' : mask_entropy,
           'biomarker' : biomarker
@@ -259,7 +260,7 @@ def main(opt):
               print(f"Explanation for sample {explanation[0]}: {explanation[1]}\n")
             
             print("\nExplainability metrics:")
-            print(f"Fidelity: {fidelity}  |  Sparsity: {sparsity}  |  Mask entropy (normalized): {mask_entropy}\n")
+            print(f"Fidelity+: {fidelity_plus}  |  Fidelity-: {fidelity_minus}  |  Sparsity: {sparsity}  |  Mask entropy (normalized): {mask_entropy}\n")
             print(f"\nSuggested biomarker: {biomarker}")
 
 if __name__ == '__main__':
