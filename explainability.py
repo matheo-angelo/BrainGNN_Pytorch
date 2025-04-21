@@ -2,21 +2,19 @@ import torch
 import numpy as np
 from torch.distributions import Categorical
 
-def add_noise_to_rows(matrix, row_indices):
-
-    torch.manual_seed(123)
-    noisy_matrix = matrix.clone()
-    noise = torch.randn_like(noisy_matrix[row_indices])
-    noisy_matrix[row_indices] += noise
-    
-    return noisy_matrix
-
 def instance_sparsity(m, M):
+    
+    # M is the maximum possible number of nodes in the mask
+    # m is the number of nodes in the mask
+    
     return np.log(m/M) / np.log(1/M)
 
 def instance_fidelity(model, data, mask, outputs):
+    
+    # Calculates Fidelity+_prob, as exemplified in the GNN XAI taxonomic survey paper
+    
     model_prob = outputs[0].max(1)[0]
-    data.x = add_noise_to_rows(data.x, mask)
+    data.x[mask] = 0
     outputs= model(data.x, data.edge_index, data.batch, data.edge_attr,data.pos)
     masked_model_prob = outputs[0].max(1)[0]
     return model_prob - masked_model_prob	
