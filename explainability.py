@@ -4,10 +4,10 @@ from torch.distributions import Categorical
 
 def instance_sparsity(m, M):
     
-    # M is the maximum possible number of nodes in the mask
+    # M is the number of nodes in the graph
     # m is the number of nodes in the mask
     
-    return np.log(m/M) / np.log(1/M)
+    return 1 - m/M
 
 def instance_fidelity_plus(model, data, mask, outputs):
     
