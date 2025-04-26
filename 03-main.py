@@ -37,7 +37,15 @@ def main(opt):
     load_model = opt.load_model
     opt_method = opt.optim
     num_epoch = opt.n_epochs
+    atlas = opt.atlas
     n_roi = opt.nroi
+    if n_roi is None:
+        if atlas == 'cc200':
+            n_roi = 200
+        elif atlas == 'cc400':
+            n_roi = 400
+        elif atlas == 'ho':
+            n_roi = 111
     fold = opt.fold
     explain = opt.explain
     print_explainability_report = opt.print_explainability_report
@@ -65,7 +73,7 @@ def main(opt):
 
 
     ############### Define Graph Deep Learning Network ##########################
-    model = Network(opt.indim,opt.ratio,opt.nclass).to(device)
+    model = Network(opt.indim,opt.ratio,opt.nclass,R=n_roi).to(device)
     print(model)
 
     if opt_method == 'Adam':
@@ -250,7 +258,7 @@ def main(opt):
           'mask_entropy' : mask_entropy,
           'biomarker' : biomarker
         }
-        with open(model_file_name + '_explainability_report.pkl', 'wb') as file:
+        with open(os.path.join(opt.save_path, model_file_name + '_explainability_report.pkl'), 'wb') as file:
           pickle.dump(data_to_save, file)
 
         if print_explainability_report:
@@ -282,7 +290,8 @@ if __name__ == '__main__':
     parser.add_argument('--lamb5', type=float, default=0.1, help='s1 consistence regularization')
     parser.add_argument('--ratio', type=float, default=0.5, help='pooling ratio')
     parser.add_argument('--indim', type=int, default=200, help='feature dim')
-    parser.add_argument('--nroi', type=int, default=200, help='num of ROIs')
+    parser.add_argument('--nroi', type=int, default=None, help='num of ROIs')
+    parser.add_argument('--atlas', type=int, default='cc200', help='Brain parcellation atlas. Options: ho, cc200 and cc400, default: cc200.')
     parser.add_argument('--nclass', type=int, default=2, help='num of classes')
     parser.add_argument('--load_model', type=bool, default=False)
     parser.add_argument('--save_model', type=bool, default=True)
