@@ -2,6 +2,8 @@ import torch
 import numpy as np
 from torch.distributions import Categorical
 
+
+
 def instance_sparsity(m, M):
     
     # M is the number of nodes in the graph
@@ -40,14 +42,16 @@ def explain_model(model, explain_loader, sample_indices, n_roi, biomarker_size=1
     fidelity_plus_sum = 0
     fidelity_minus_sum = 0
     mask_size = None
-    max_entropy_distribution = torch.ones(n_roi)/n_roi
-    mask_distribution = torch.zeros(n_roi, device=device)
+    autism_mask_distribution = torch.zeros(n_roi, device=device)
 
     for i, data in enumerate(explain_loader):
 
         model.explain()
         data = data.to(device)
         outputs= model(data.x, data.edge_index, data.batch, data.edge_attr,data.pos)
+
+        pred = outputs[0].max(1)[1] # 0 is autism, 1 is control
+
         node_mask = outputs[-1]
         node_mask, _ = torch.sort(node_mask)
         sample_idx = sample_indices[i]
@@ -58,7 +62,8 @@ def explain_model(model, explain_loader, sample_indices, n_roi, biomarker_size=1
         sparsity = instance_sparsity(mask_size, n_roi)
         sparsity_sum += sparsity
         
-        mask_distribution[node_mask] += 1
+        if pred==0: 
+            autism_mask_distribution[node_mask] += 1
 
         # Calculate fidelity
         fidelity_plus = instance_fidelity_plus(model, data, node_mask, outputs)
@@ -73,11 +78,7 @@ def explain_model(model, explain_loader, sample_indices, n_roi, biomarker_size=1
     
     fidelity_minus = (fidelity_minus_sum	/ len(explain_loader)).item()
     
-    mask_entropy = Categorical(probs = mask_distribution / mask_distribution.sum()).entropy()
-    max_possible_entropy = Categorical(probs = max_entropy_distribution).entropy()
-    normalized_mask_entropy = mask_entropy / max_possible_entropy
-    
-    biomarker = (torch.topk(mask_distribution, biomarker_size, sorted=True)[1]).tolist()
+    biomarker = (torch.topk(autism_mask_distribution, biomarker_size, sorted=True)[1]).tolist()
+    biomarker_consistency = autism_mask_distribution[biomarker].sum() / autism_mask_distribution.sum()
 
-    return explanation_list, fidelity_plus, fidelity_minus, sparsity, normalized_mask_entropy, biomarker
-
+    return explanation_list, fidelity_plus, fidelity_minus, sparsity, biomarker_consistency, biomarker
