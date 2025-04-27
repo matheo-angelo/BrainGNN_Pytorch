@@ -37,15 +37,21 @@ def main(opt):
     load_model = opt.load_model
     opt_method = opt.optim
     num_epoch = opt.n_epochs
+
     atlas = opt.atlas
     n_roi = opt.nroi
-    if n_roi is None:
+    indim = opt.indom
+    if n_roi is None or indim is None:
         if atlas == 'cc200':
             n_roi = 200
+            indim = 200
         elif atlas == 'cc400':
             n_roi = 400
+            indim = 400
         elif atlas == 'ho':
             n_roi = 111
+            indim = 111
+
     fold = opt.fold
     explain = opt.explain
     print_explainability_report = opt.print_explainability_report
@@ -73,7 +79,7 @@ def main(opt):
 
 
     ############### Define Graph Deep Learning Network ##########################
-    model = Network(opt.indim,opt.ratio,opt.nclass,R=n_roi).to(device)
+    model = Network(indim,opt.ratio,opt.nclass,R=n_roi).to(device)
     print(model)
 
     if opt_method == 'Adam':
@@ -249,13 +255,13 @@ def main(opt):
     if explain:
 
         explain_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
-        explanation_list, fidelity_plus, fidelity_minus, sparsity, mask_entropy, biomarker = explain_model(model, explain_loader, te_index, n_roi)
+        explanation_list, fidelity_plus, fidelity_minus, sparsity, biomarker_consistency, biomarker = explain_model(model, explain_loader, te_index, n_roi)
         data_to_save = {
           'explanation_list' : explanation_list,
           'fidelity_plus' : fidelity_plus,
           'fidelity_minus' : fidelity_minus,
           'sparsity' : sparsity,
-          'mask_entropy' : mask_entropy,
+          'biomarker_consistency' : biomarker_consistency,
           'biomarker' : biomarker
         }
         with open(os.path.join(opt.save_path, model_file_name + '_explainability_report.pkl'), 'wb') as file:
@@ -265,11 +271,12 @@ def main(opt):
 
             print("\nExplainability report:\n")
             for explanation in explanation_list:
-              print(f"Explanation for sample {explanation[0]}: {explanation[1]}\n")
+              print(f"Explanation for sample {explanation[0]} (assigned as {'autistic' if dataset.data.y[explanation[0]] == 0 else 'control'}): {explanation[1]}\n")
             
             print("\nExplainability metrics:")
-            print(f"Fidelity+: {fidelity_plus}  |  Fidelity-: {fidelity_minus}  |  Sparsity: {sparsity}  |  Mask entropy (normalized): {mask_entropy}\n")
-            print(f"\nSuggested biomarker: {biomarker}")
+            print(f"Fidelity+: {fidelity_plus}  |  Fidelity-: {fidelity_minus}  |  Sparsity: {sparsity}\n")
+            print(f"Suggested biomarker: {biomarker}")
+            print(f"Biomarker consistency: {biomarker_consistency}")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -289,7 +296,7 @@ if __name__ == '__main__':
     parser.add_argument('--lamb4', type=float, default=0.1, help='s2 entropy regularization')
     parser.add_argument('--lamb5', type=float, default=0.1, help='s1 consistence regularization')
     parser.add_argument('--ratio', type=float, default=0.5, help='pooling ratio')
-    parser.add_argument('--indim', type=int, default=200, help='feature dim')
+    parser.add_argument('--indim', type=int, default=None, help='feature dim')
     parser.add_argument('--nroi', type=int, default=None, help='num of ROIs')
     parser.add_argument('--atlas', type=int, default='cc200', help='Brain parcellation atlas. Options: ho, cc200 and cc400, default: cc200.')
     parser.add_argument('--nclass', type=int, default=2, help='num of classes')
