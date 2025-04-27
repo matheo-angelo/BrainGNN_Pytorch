@@ -40,7 +40,7 @@ def main(opt):
 
     atlas = opt.atlas
     n_roi = opt.nroi
-    indim = opt.indom
+    indim = opt.indim
     if n_roi is None or indim is None:
         if atlas == 'cc200':
             n_roi = 200
@@ -298,7 +298,7 @@ if __name__ == '__main__':
     parser.add_argument('--ratio', type=float, default=0.5, help='pooling ratio')
     parser.add_argument('--indim', type=int, default=None, help='feature dim')
     parser.add_argument('--nroi', type=int, default=None, help='num of ROIs')
-    parser.add_argument('--atlas', type=int, default='cc200', help='Brain parcellation atlas. Options: ho, cc200 and cc400, default: cc200.')
+    parser.add_argument('--atlas', type=str, default='cc200', help='Brain parcellation atlas. Options: ho, cc200 and cc400, default: cc200.')
     parser.add_argument('--nclass', type=int, default=2, help='num of classes')
     parser.add_argument('--load_model', type=bool, default=False)
     parser.add_argument('--save_model', type=bool, default=True)
